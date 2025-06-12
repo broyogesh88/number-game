@@ -1,0 +1,8 @@
+<form method="post" action="{% url 'start_game' %}">
+  {% csrf_token %}
+  <label>Player 1: <input name="player1" required></label><br>
+  <label>Player 2: <input name="player2" required></label><br>
+  <label>Steps: <input name="steps" type="number" value="10" required></label><br>
+  <button type="submit">Start Game</button>
+</form>
+

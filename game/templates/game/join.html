@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Join Game</title>
+  <style>
+    body {
+      background-color: #f4f6f8;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #008080;
+      padding: 20px 0;
+      text-align: center;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .main-container {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 40px;
+      padding: 60px 20px;
+      flex-wrap: wrap;
+    }
+
+    .join-container,
+    .rules-container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      width: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .join-container {
+      align-items: center;
+      text-align: center;
+    }
+
+    .join-container h2,
+    .rules-container h3 {
+      color: #2d3748;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .join-container form {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 16px;
+      font-size: 16px;
+      color: #4a5568;
+      text-align: left;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: #f0f4f8;
+      font-size: 15px;
+    }
+
+    button[type="submit"] {
+      margin-top: 16px;
+      padding: 12px 18px;
+      background-color: #008080;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #006666;
+    }
+
+    .rules-container ul {
+      text-align: left;
+      padding-left: 20px;
+      color: #444;
+    }
+
+    .rules-container ul li {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1000px) {
+      .main-container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .join-container,
+      .rules-container {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>Battle of Numbers ⚔️</header>
+
+  <div class="main-container">
+    <div class="join-container">
+      <h2>🔗 Join Game: {{ game.game_code }}</h2>
+      <form method="post">
+        {% csrf_token %}
+        <label>
+          Your Name:
+          <input type="text" name="player_name" required>
+        </label>
+        <button type="submit">Join</button>
+      </form>
+    </div>
+
+    <div class="rules-container">
+      <h3>🧠 Game Rules</h3>
+      <ul>
+        <li>Game Idea is to <strong>Lower</strong> down the opponent Score</li>
+        <li>Choose number of <strong>Rounds</strong>: 10, 20, 30, 40, or 50.</li>
+        <li>Each player receives numbers from <code>[1 ... Rounds + Rounds / 2]</code>, usable only once.</li>
+        <li>For 10 Rounds you will get <code>[1,2,3 ... 15]</code>, Similarly for 20 - <code>[1, 2, 3 ..., 30]</code></li>
+        <li>Use a number directly to set opponent's value to that number.</li>
+        <li>Use an operand (<code>+, -, *, /</code>) with a number to perform that operation on opponent's value.</li>
+        <li>You can use each Operand only once for 10 Rounds, twice for 20 and so on.</li>
+        <li>For each number you select, the number and all the numbers smaller to it will be removed from List</li>
+        <li>Game ends if all Rounds are done or both Player exhaust their List.</li>
+        <li>Player with <strong>Higher</strong> score <strong>WINS.</strong></li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

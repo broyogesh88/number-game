@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game Over</title>
+  <style>
+    body {
+      background-color: #f4f6f8;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .winner-container {
+      max-width: 600px;
+      margin: 100px auto;
+      padding: 40px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 {
+      font-size: 36px;
+      color: #2d3748;
+    }
+    h2 {
+      font-size: 28px;
+      color: #008080;
+    }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      background-color: #008080;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    a:hover {
+      background-color: #006666;
+    }
+  </style>
+</head>
+<body>
+  <header style="background-color: #008080; padding: 20px 0; text-align: center; color: white; font-size: 28px; font-weight: bold; letter-spacing: 1px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+    Battle of Numbers ⚔️
+  </header>
+  <div class="winner-container">
+    <h1>🏆 Game Over</h1>
+    
+    {% if game.winner %}
+      <h2>{{ game.winner.name }} wins!</h2>
+    {% else %}
+      <h2>It's a tie!</h2>
+    {% endif %}
+
+    <a href="{% url 'create_game' %}">🔁 Play Again</a>
+  </div>
+</body>
+</html>

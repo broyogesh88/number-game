@@ -1,0 +1,209 @@
+{% load custom_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Number Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #f4f6f8;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .operand-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .operand-btn {
+      flex: 1 1 45%;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .operand-available {
+      background-color: #38a169;
+      color: white;
+    }
+    .operand-used {
+      background-color: #e53e3e;
+      color: white;
+    }
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+      gap: 10px;
+    }
+    .number-btn {
+      padding: 10px 0;
+      background-color: #e2e8f0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .number-btn:hover {
+      background-color: #cbd5e0;
+    }
+    .selected {
+      background-color: #008080 !important;
+      color: white !important;
+    }
+    button[type="submit"] {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background-color: #008080;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover {
+      background-color: #006666;
+    }
+    h2, h3, h4 {
+      color: #2d3748;
+    }
+  </style>
+</head>
+<body>
+  <header style="background-color: #008080; padding: 20px 0; text-align: center; color: white; font-size: 28px; font-weight: bold; letter-spacing: 1px;">
+    Battle of Numbers ⚔️
+  </header>
+
+  <div class="container">
+    <h2>Welcome {{ player.name }}</h2>
+    <h3>Round {{ game.round }}</h3>
+
+    {% if is_turn and player.available_numbers %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="move" id="moveInput">
+
+        <div class="section">
+          <h4>Choose Operand (optional)</h4>
+          <div class="operand-grid">
+            {% for op in "+-*/" %}
+        <button type="button"
+                class="operand-btn {% if player.operands|get_item:op > 0 %}operand-available{% else %}operand-used{% endif %}"
+                onclick="selectOperand('{{ op }}', event)"
+                {% if player.operands|get_item:op == 0 %}disabled{% endif %}>
+          {{ op }} ({{ player.operands|get_item:op }})
+        </button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="section">
+          <h4>Select Your Number</h4>
+          <div class="number-grid">
+            {% for num in player.available_numbers %}
+              <button type="button" class="number-btn" onclick="selectNumber({{ num }}, event)">{{ num }}</button>
+            {% empty %}
+              <p>No available numbers left.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+          <div data-opponent-score="{{ opponent.value }}">
+            <h3 style="margin-top: 15px;">
+              <strong>Selected Move:</strong> <span id="movePreview">None</span>
+            </h3>
+            <h3>
+              <strong>Projected Opponent Score:</strong> <span id="projectedScore">—</span>
+            </h3>
+            <button type="submit" id="submitBtn" disabled>Submit Move</button>
+          </div>
+
+        </div>
+      </form>
+
+    {% elif is_turn and not player.available_numbers %}
+      <p style="font-weight: bold; color: #e53e3e;">You used all your numbers. Wait for the other player to make their move.</p>
+
+    {% else %}
+      <p>Waiting for {{ opponent.name }} to make a move...</p>
+      <script>setInterval(() => { location.reload(); }, 3000);</script>
+    {% endif %}
+
+    {% if message %}
+      <p style="font-weight: bold; color: #e53e3e;">{{ message }}</p>
+    {% endif %}
+
+    <div style="display: flex; justify-content: space-between; gap: 40px; margin: 40px auto; max-width: 800px; padding: 20px;">
+      
+      <!-- Your Info -->
+      <div style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+        <h4>Your Info:</h4>
+        <p>Score: {{ player.value }}</p>
+      </div>
+
+      <!-- Opponent Info -->
+      <div style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+        <h4>{{ opponent.name }}:</h4>
+        <p>Score: {{ opponent.value }}</p>
+      </div>
+
+    </div>
+
+
+  </div>
+
+  <script>
+    let selectedOperand = '';
+    let selectedNumber = '';
+
+    function selectOperand(op, event) {
+      selectedOperand = selectedOperand === op ? '' : op;
+      document.querySelectorAll('.operand-btn').forEach(btn => btn.classList.remove('selected'));
+      if (selectedOperand) event.target.classList.add('selected');
+      updateMove();
+    }
+
+    function selectNumber(num, event = null) {
+      selectedNumber = num;
+      document.querySelectorAll('.number-btn').forEach(btn => btn.classList.remove('selected'));
+      if (event) event.target.classList.add('selected');
+      updateMove();
+    }
+
+    function updateMove() {
+      const prefix = selectedOperand || '';
+      const fullMove = prefix + selectedNumber;
+      document.getElementById('moveInput').value = fullMove;
+      document.getElementById('movePreview').textContent = fullMove || 'None';
+      document.getElementById('submitBtn').disabled = !selectedNumber;
+
+      const opponentScore = parseFloat(document.querySelector('[data-opponent-score]').getAttribute('data-opponent-score'));
+      let projected = null;
+
+      if (selectedNumber !== '') {
+        const num = parseFloat(selectedNumber);
+
+        switch (selectedOperand) {
+          case '+': projected = opponentScore + num; break;
+          case '-': projected = opponentScore - num; break;
+          case '*': projected = opponentScore * num; break;
+          case '/': projected = num !== 0 ? (opponentScore / num).toFixed(2) : '∞'; break;
+          default: projected = num;
+        }
+      }
+
+      document.getElementById('projectedScore').textContent = projected !== null ? projected : '—';
+    }
+
+  </script>
+</body>
+</html>
