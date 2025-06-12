@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ["https://333b-183-82-126-150.ngrok-free.app"]
+CSRF_TRUSTED_ORIGINS = ["https://number-game-o5lg.onrender.com"]
 
 # Application definition
 
