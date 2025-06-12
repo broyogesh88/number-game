@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ["https://number-game-o5lg.onrender.com"]
+CSRF_TRUSTED_ORIGINS = ["https://number-game-yp3u.onrender.com"]
 
 # Application definition
 
