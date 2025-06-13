@@ -4,6 +4,21 @@ from .models import Game, Player
 
 OPERATORS = ['+', '-', '*', '/']
 
+def criss_cross_numbers(steps):
+    total_numbers = int(steps * 3.2)  # Ensure integer
+    person_a, person_b = [], []
+
+    for i in range(total_numbers // 2):
+        a, b = 2 * i + 1, 2 * i + 2
+        if i % 2 == 0:
+            person_a.append(a)
+            person_b.append(b)
+        else:
+            person_a.append(b)
+            person_b.append(a)
+
+    return sorted(person_a), sorted(person_b)
+
 def create_game(request):
     if request.method == 'POST':
         name = request.POST.get('player_name')
@@ -12,14 +27,13 @@ def create_game(request):
         except ValueError:
             return render(request, 'game/create.html', {'error': 'Invalid number of steps.'})
 
-        if steps not in [10, 20, 30, 40, 50]:
-            return render(request, 'game/create.html', {'error': 'Rounds must be one of 10, 20, 30, 40, or 50.'})
+        if steps not in [10, 20, 30]:
+            return render(request, 'game/create.html', {'error': 'Rounds must be one of 10, 20, or 30.'})
 
         operand_limit = steps // 10
-        max_number = steps + (steps // 2)
-        number_pool = list(range(1, max_number + 1))
-
         game = Game.objects.create(steps=steps, parent_array=[])
+
+        player_a_numbers, _ = criss_cross_numbers(steps)
 
         player = Player.objects.create(
             game=game,
@@ -27,7 +41,7 @@ def create_game(request):
             value=0,
             player_index=0,
             operands={op: operand_limit for op in OPERATORS},
-            available_numbers=number_pool
+            available_numbers=player_a_numbers
         )
         return redirect('waiting_room', game_code=game.game_code)
 
@@ -60,7 +74,8 @@ def join_game(request, game_code):
         name = request.POST.get('player_name')
         steps = game.steps
         operand_limit = steps // 10
-        max_number = steps + (steps // 2)
+
+        _, player_b_numbers = criss_cross_numbers(steps)
 
         player = Player.objects.create(
             game=game,
@@ -68,7 +83,7 @@ def join_game(request, game_code):
             value=0,
             player_index=1,
             operands={op: operand_limit for op in OPERATORS},
-            available_numbers=list(range(1, max_number + 1))
+            available_numbers=player_b_numbers
         )
         return redirect('play_game', player_id=player.id)
 
@@ -83,7 +98,6 @@ def play_game(request, player_id):
     both_done = all(len(p.available_numbers) == 0 for p in players)
     round_limit_reached = game.round >= game.steps
 
-    # Game complete condition
     if both_done or round_limit_reached:
         game.is_complete = True
         if players[0].value > players[1].value:
@@ -95,7 +109,6 @@ def play_game(request, player_id):
         game.save()
         return redirect('winner', game_id=game.id)
 
-    # Handle move submission
     if request.method == 'POST':
         if player.available_numbers:
             move = request.POST.get('move', '').replace(' ', '')
@@ -104,7 +117,6 @@ def play_game(request, player_id):
             player.has_moved = True
             player.save()
 
-            # Round increment logic
             p1, p2 = game.players.all()
             if p1.has_moved and p2.has_moved:
                 game.round += 1
@@ -123,7 +135,6 @@ def play_game(request, player_id):
 
         return redirect('play_game', player_id=player.id)
 
-    # Determine if this player can move
     is_turn = False
     if player.available_numbers:
         if game.current_turn == player.player_index:
@@ -147,7 +158,6 @@ def process_move(game, player, opponent, move):
     if not move:
         return
 
-    # Parse operand and number
     if move[0] in '+-*/':
         operand = move[0]
         try:
@@ -164,10 +174,9 @@ def process_move(game, player, opponent, move):
     if number not in player.available_numbers:
         return
 
-    # Apply operand effect with rule: min value = 1 (except for division)
     if operand:
         if player.operands.get(operand, 0) <= 0:
-            return  # Operand already used
+            return
 
         result = opponent.value
         if operand == '+':
@@ -181,26 +190,22 @@ def process_move(game, player, opponent, move):
             opponent.value = max(result, 1)
         elif operand == '/':
             if number != 0:
-                opponent.value = opponent.value / number  # Allow decimal result
+                opponent.value = round(opponent.value / number, 2)
             else:
-                return  # Invalid move: divide by zero
+                return
 
         player.operands[operand] -= 1
     else:
-        opponent.value = max(number, 1)  # Direct value set – enforce min 1
+        opponent.value = max(number, 1)
 
-    # Remove number and smaller ones
     player.available_numbers = [n for n in player.available_numbers if n > number]
-
-    # Save updates
     player.save()
     opponent.save()
 
-    # Turn logic
     if opponent.available_numbers:
         game.current_turn = opponent.player_index
     else:
-        game.current_turn = player.player_index  # Let same player continue
+        game.current_turn = player.player_index
 
     game.save()
 
@@ -214,4 +219,3 @@ def apply_op(a, b, op):
     elif op == '/':
         return round(a / b, 2) if b != 0 else a
     return a
-
