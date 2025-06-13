@@ -6,11 +6,27 @@
     body {
       background-color: #f4f6f8;
       font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #008080;
+      padding: 20px 0;
+      text-align: center;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .main-wrapper {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      height: calc(100vh - 80px); /* leaving space for header */
+      padding: 20px;
     }
 
     .message-container {
@@ -42,13 +58,13 @@
   </style>
 </head>
 <body>
-  <header style="background-color: #008080; padding: 20px 0; text-align: center; color: white; font-size: 28px; font-weight: bold; letter-spacing: 1px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-    Battle of Numbers ⚔️
-  </header>
-  <div class="message-container">
-    <h3>🚫 This game already has two players. You cannot join.</h3>
-    <a href="{% url 'create_game' %}">Create a new game</a>
-  </div>
+  <header>Battle of Numbers ⚔️</header>
 
+  <div class="main-wrapper">
+    <div class="message-container">
+      <h3>🚫 This game already has two players. You cannot join.</h3>
+      <a href="{% url 'create_game' %}">Create a new game</a>
+    </div>
+  </div>
 </body>
 </html>
