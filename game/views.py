@@ -164,44 +164,53 @@ def process_move(game, player, opponent, move):
     if number not in player.available_numbers:
         return
 
-    # Apply operand effect
+    # Apply operand effect with safe bounds
     if operand:
         if player.operands.get(operand, 0) <= 0:
-            return  # Cannot reuse used operand
+            return  # Operand exhausted
+
         if operand == '+':
             opponent.value += number
         elif operand == '-':
-            opponent.value -= number
+            opponent.value = max(0, opponent.value - number)
         elif operand == '*':
             opponent.value *= number
         elif operand == '/':
             if number != 0:
                 opponent.value //= number
+
+        # After operation, clamp value to non-negative
+        opponent.value = max(0, opponent.value)
+
         player.operands[operand] -= 1
     else:
         opponent.value = number
 
-    # Remove number and all smaller numbers
+    # Remove selected number and all smaller ones
     player.available_numbers = [n for n in player.available_numbers if n > number]
 
-    # Save updates
+    # Save state
     player.save()
     opponent.save()
-    game.save()
 
-    # Switch turn only if opponent has numbers
+    # Switch turn only if opponent has numbers left
     if opponent.available_numbers:
         game.current_turn = opponent.player_index
     else:
-        game.current_turn = player.player_index  # Keep it same to let this player continue
+        game.current_turn = player.player_index  # Let this player continue if opponent is exhausted
 
     game.save()
 
 def apply_op(op, a, b):
     try:
-        if op == '+': return a + b
-        elif op == '-': return a - b
-        elif op == '*': return a * b
-        elif op == '/': return a // b if b != 0 else a
+        if op == '+':
+            result = a + b
+        elif op == '-':
+            result = a - b
+        elif op == '*':
+            result = a * b
+        elif op == '/':
+            result = a // b if b != 0 else a
+        return max(0, result)
     except:
         return a
