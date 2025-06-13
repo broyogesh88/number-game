@@ -164,53 +164,54 @@ def process_move(game, player, opponent, move):
     if number not in player.available_numbers:
         return
 
-    # Apply operand effect with safe bounds
+    # Apply operand effect with rule: min value = 1 (except for division)
     if operand:
         if player.operands.get(operand, 0) <= 0:
-            return  # Operand exhausted
+            return  # Operand already used
 
+        result = opponent.value
         if operand == '+':
-            opponent.value += number
+            result += number
+            opponent.value = max(result, 1)
         elif operand == '-':
-            opponent.value = max(0, opponent.value - number)
+            result -= number
+            opponent.value = max(result, 1)
         elif operand == '*':
-            opponent.value *= number
+            result *= number
+            opponent.value = max(result, 1)
         elif operand == '/':
             if number != 0:
-                opponent.value //= number
-
-        # After operation, clamp value to non-negative
-        opponent.value = max(0, opponent.value)
+                opponent.value = opponent.value / number  # Allow decimal result
+            else:
+                return  # Invalid move: divide by zero
 
         player.operands[operand] -= 1
     else:
-        opponent.value = number
+        opponent.value = max(number, 1)  # Direct value set – enforce min 1
 
-    # Remove selected number and all smaller ones
+    # Remove number and smaller ones
     player.available_numbers = [n for n in player.available_numbers if n > number]
 
-    # Save state
+    # Save updates
     player.save()
     opponent.save()
 
-    # Switch turn only if opponent has numbers left
+    # Turn logic
     if opponent.available_numbers:
         game.current_turn = opponent.player_index
     else:
-        game.current_turn = player.player_index  # Let this player continue if opponent is exhausted
+        game.current_turn = player.player_index  # Let same player continue
 
     game.save()
 
-def apply_op(op, a, b):
-    try:
-        if op == '+':
-            result = a + b
-        elif op == '-':
-            result = a - b
-        elif op == '*':
-            result = a * b
-        elif op == '/':
-            result = a // b if b != 0 else a
-        return max(0, result)
-    except:
-        return a
+def apply_op(a, b, op):
+    if op == '+':
+        return max(round(a + b, 2), 1)
+    elif op == '-':
+        return max(round(a - b, 2), 1)
+    elif op == '*':
+        return max(round(a * b, 2), 1)
+    elif op == '/':
+        return round(a / b, 2) if b != 0 else a
+    return a
+
