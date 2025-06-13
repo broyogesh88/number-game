@@ -193,9 +193,9 @@
         const num = parseFloat(selectedNumber);
 
         switch (selectedOperand) {
-          case '+': projected = opponentScore + num; break;
-          case '-': projected = opponentScore - num; break;
-          case '*': projected = opponentScore * num; break;
+          case '+': projected = max(opponentScore + num, 1); break;
+          case '-': projected = max(opponentScore - num, 1); break;
+          case '*': projected = max(opponentScore * num, 1); break;
           case '/': projected = num !== 0 ? (opponentScore / num).toFixed(2) : '∞'; break;
           default: projected = num;
         }
